@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | paper_ai</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle mb-2" style="width: 50px; height: 50px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                </div>
+                <h4 class="fw-bold mb-1">paper_ai</h4>
+                <p class="text-muted small">Sign in to control room console</p>
+            </div>
+
+            <!-- Error Alerts -->
+            {% if form.errors or form.non_field_errors %}
+            <div class="alert alert-danger py-2 small" role="alert">
+                Invalid username or password. Please try again.
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="username-input" class="form-label small fw-semibold text-muted">Username</label>
+                    {{ form.username }}
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between">
+                        <label for="password-input" class="form-label small fw-semibold text-muted">Password</label>
+                    </div>
+                    {{ form.password }}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="mt-4 pt-3 border-top text-center">
+                <small class="text-muted">Need access? Contact System Admin.</small>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

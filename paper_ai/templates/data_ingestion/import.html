@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Import Process Logs | paper_ai{% endblock %}
+{% block page_title %}Import Historical Process Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <div class="row">
+        <div class="col-12 col-xl-8">
+            <!-- Form panel -->
+            <div class="panel">
+                <h5 class="fw-bold mb-3">Upload Sensor Data CSV</h5>
+                <p class="text-muted small mb-4">
+                    Select a CSV process log file exported from the PLC/Historian database. The CSV columns will be parsed, validated, and saved to PostgreSQL. Existing telemetries for the same Grade Change IDs will be overwritten to prevent duplicates.
+                </p>
+
+                <form method="post" enctype="multipart/form-data" action="{% url 'data_ingestion:upload' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="csv-file-input" class="form-label fw-semibold">Process Log CSV File</label>
+                        {{ form.csv_file }}
+                        {% if form.csv_file.errors %}
+                        <div class="text-danger small mt-2">
+                            {% for error in form.csv_file.errors %}
+                            <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text text-muted">
+                            Maximum recommended file size: 20MB. Format: CSV only.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary d-flex align-items-center gap-2 px-4 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            Start Ingestion
+                        </button>
+                        <a href="{% url 'dashboard:index' %}" class="btn btn-outline-secondary px-4 py-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <!-- Documentation Panel -->
+            <div class="panel">
+                <h5 class="fw-bold mb-3">CSV Schema Requirements</h5>
+                <p class="text-muted small">
+                    The CSV parser requires exact column headers (case-insensitive and whitespace-stripped). Verify that your CSV contains the following columns:
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm small">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Column Header</th>
+                                <th>Expected Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-monospace">Timestamp</td>
+                                <td>Date/Time (YYYY-MM-DD HH:MM:SS)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Machine Speed</td>
+                                <td>Float (m/min)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Headbox Flow</td>
+                                <td>Float (L/min)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Consistency</td>
+                                <td>Float (%)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Steam Pressure</td>
+                                <td>Float (bar)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Basis Weight</td>
+                                <td>Float (g/m²)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Moisture</td>
+                                <td>Float (%)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Grade</td>
+                                <td>String (e.g. "GradeA")</td>
+                            </tr>
+                            <tr>
+                                <td class="font-monospace">Grade Change ID</td>
+                                <td>String (e.g. "GC_20260715_01")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

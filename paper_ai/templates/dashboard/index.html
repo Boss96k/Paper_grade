@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | paper_ai{% endblock %}
+{% block page_title %}Operational Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Card 1 -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card d-flex flex-column justify-content-between h-100">
+                <div>
+                    <div class="kpi-title">Total Grade Transitions</div>
+                    <div class="kpi-value text-primary">{{ total_grade_changes }}</div>
+                </div>
+                <div class="kpi-desc mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary me-1"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    Historical transitions recorded
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card d-flex flex-column justify-content-between h-100">
+                <div>
+                    <div class="kpi-title">Sensor Telemetries</div>
+                    <div class="kpi-value">{{ total_sensor_data }}</div>
+                </div>
+                <div class="kpi-desc mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary me-1"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    Time-series data points
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card d-flex flex-column justify-content-between h-100">
+                <div>
+                    <div class="kpi-title">Operator Acceptance</div>
+                    <div class="kpi-value text-success">{{ acceptance_rate }}%</div>
+                </div>
+                <div class="kpi-desc mt-2">
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ acceptance_rate }}%;" aria-valuenow="{{ acceptance_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1" style="font-size: 0.75rem;">
+                        <span>Accepted: {{ accepted_count }}</span>
+                        <span>Modified: {{ modified_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card d-flex flex-column justify-content-between h-100">
+                <div>
+                    <div class="kpi-title">Pending Recommendations</div>
+                    <div class="kpi-value {% if pending_count > 0 %}text-warning{% else %}text-muted{% endif %}">{{ pending_count }}</div>
+                </div>
+                <div class="kpi-desc mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-warning me-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Awaiting operator review
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Panel -->
+    <div class="row">
+        <!-- Recent Transitions -->
+        <div class="col-12 col-lg-8">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>Recent Grade Changes</span>
+                    {% if user.is_admin or user.is_process_engineer %}
+                    <a href="{% url 'data_ingestion:upload' %}" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Upload CSV Log
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Grade Change ID</th>
+                                <th>Target Grade</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for gc in recent_grade_changes %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ gc.grade_change_id }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ gc.target_grade }}</span>
+                                </td>
+                                <td>{{ gc.start_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ gc.end_time|date:"Y-m-d H:i"|default:"-" }}</td>
+                                <td>
+                                    {% if gc.status == 'STABILIZED' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Stabilized</span>
+                                    {% elif gc.status == 'STABILIZING' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Stabilizing</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/admin/grade_change/gradechange/{{ gc.grade_change_id }}/change/" class="btn btn-outline-secondary btn-sm" target="_blank">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-muted"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <p class="mb-0">No grade change records found.</p>
+                                    <small class="text-muted">Import a process log CSV to begin analysis.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info Panel -->
+        <div class="col-12 col-lg-4">
+            <div class="panel">
+                <h5 class="fw-bold mb-3">System Information</h5>
+                <p class="text-muted small">
+                    This system provides decision support for optimizing paper grade changes. In Phase 1, you can ingest high-resolution DCS/PLC historical logs via CSV and review the telemetry database in the Django Admin.
+                </p>
+                <hr>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="bg-primary-subtle text-primary rounded p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Data Ingestion</div>
+                            <div class="text-muted small">Supports standard CSV file format with timestamped process variable values.</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="bg-success-subtle text-success rounded p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Role Access</div>
+                            <div class="text-muted small">Access control is enforced depending on User Roles (Admin, Process Engineer, Operator).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
